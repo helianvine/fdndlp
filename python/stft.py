@@ -4,7 +4,6 @@
 # =============================================================================
 
 import numpy as np
-import librosa
 from numpy.lib import stride_tricks
 
 def stft(data, frame_size=512, overlap=0.75, window=None):
@@ -68,7 +67,6 @@ def log_spectrum(raw_data, frame_length=512):
     if raw_data.ndim == 1:
         raw_data = np.reshape(raw_data, (1, -1))
     freq_data = stft(raw_data)
-    # freq_data = librosa.stft(raw_data, n_fft=frame_length)
     phase = np.angle(freq_data)
     freq_data = np.abs(freq_data)
     freq_data = np.maximum(freq_data, 1e-8)

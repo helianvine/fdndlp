@@ -7,11 +7,12 @@
 
 import stft
 import argparse
-import librosa
 import time
+import os
 import numpy as np
+import soundfile as sf
 from numpy.lib import stride_tricks
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 class Configrations():
     """Argument parser for WPE method configurations."""
@@ -19,6 +20,10 @@ class Configrations():
         self.parser = argparse.ArgumentParser()
 
     def parse(self):
+        self.parser.add_argument('filename')
+        self.parser.add_argument(
+            '-o', '--output', default='drv.wav',
+            help='output filename')
         self.parser.add_argument(
             '-m', '--mic_num', type=int, default=3,
             help='number of input channels')
@@ -67,9 +72,10 @@ class WpeMethod(object):
         self._iterations = int(value)
 
     def _display_cfgs(self):
-        print("Input channels: %d" % self.channels)
-        print("Output channels: %d" % self.out_num)
-        print("Prediction order: %d" % self.p)
+        print('\nSettings:')
+        print("Input channel: %d" % self.channels)
+        print("Output channel: %d" % self.out_num)
+        print("Prediction order: %d\n" % self.p)
 
 
     def run_offline(self, data):
@@ -106,7 +112,7 @@ class WpeMethod(object):
         drv_data = stft.istft(
             drv_freq_data, 
             frame_size=self.frame_size, overlap=self.overlap)
-        return drv_data / drv_data.max()
+        return drv_data / np.abs(drv_data).max()
 
 
     def __ndlp(self, xk):
@@ -148,21 +154,30 @@ class WpeMethod(object):
         return np.concatenate((xk_buf[0:self.d], dk))
 
     def load_audio(self, filename):
-        data, _ = librosa.load(filename, sr=None, mono=False)
+        data, fs = sf.read(filename)
+        data = data.T
         assert(data.shape[0] >= self.channels)
         if data.shape[0] > self.channels:
             print(
                 "The number of the input channels is %d," % data.shape[0],
                 "and only the first %d channels are loaded." % self.channels)
             data = data[0: self.channels]
-        return data
+        return data.copy(), fs
+
+    def write_wav(self, data, fs, filename, path='wav_out'):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        filepath = os.path.join(path, filename)
+        print('Write to file: %s.' % filepath)
+        sf.write(filepath, data.T, fs, subtype='PCM_16')
 
 if __name__ == '__main__':
-    filename = '../wav_sample/sample_4ch.wav'
     cfgs = Configrations().parse()
+    # cfgs.filename = '../wav_sample/sample_4ch.wav'
     wpe = WpeMethod(cfgs.mic_num, cfgs.out_num, cfgs.order)
-    data = wpe.load_audio(filename)
+    data, fs = wpe.load_audio(cfgs.filename)
     drv_data = wpe.run_offline(data)
+    wpe.write_wav(drv_data, fs, cfgs.output)
 
     # plt.figure()
     # spec, _ = stft.log_spectrum(drv_data[0])
