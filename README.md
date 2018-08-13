@@ -25,14 +25,14 @@ This program is an implementation of variance-normalizied delayed linear predict
     ```bash
     python wpe.py [-h] [-o OUTPUT] [-m MIC_NUM] [-n OUT_NUM] [-p ORDER] filename
     ```
-  - To use the default configrations and the given audio, sample, run:
+  - To use the default configrations and the given audio sample, run:
     ```bash
     python wpe.py ../wav_sample/sample_4ch.wav
     ```
 
 ## Layout
 ```
- /
+ ./
  +-- matlab/                          matlab code files
  |   +-- lib/
  |   |   +-- +util/                   utility functions
