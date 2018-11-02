@@ -154,7 +154,7 @@ class WpeMethod(object):
         return np.concatenate((xk_buf[0:self.d], dk))
 
     def load_audio(self, filename):
-        data, fs = sf.read(filename)
+        data, fs = sf.read(filename, always_2d=True)
         data = data.T
         assert(data.shape[0] >= self.channels)
         if data.shape[0] > self.channels:
